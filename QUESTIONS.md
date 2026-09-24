@@ -9,6 +9,10 @@
 - [ ] elementwise Add 48 MiB(108 GB/s)가 96 MiB(93 GB/s)보다 대역폭이 높은 이유 — SLC 캐시 효과인가? 크기 sweep 필요 (Phase 2).
 - [ ] M=1(decode-like) MatMul 유효 대역폭 69 GB/s가 Add(93–108 GB/s)보다 낮은 이유 — 단일 스레드 GEMV 경로인가?
 
+- [ ] M4 unified memory에서 CPU와 GPU가 memory-bound 작업을 동시에 돌리면 대역폭을 나눠 먹는가? (contention 측정)
+- [ ] unified memory에서도 CoreML/ANE로 넘길 때 layout 변환 copy가 생기는가? (Phase 4)
+- [ ] llama.cpp `--n-gpu-layers`를 0→전체로 바꾸며 CPU/GPU 분할 지점별 속도 측정 (한 모델을 두 칩에 나눠 싣는 가장 싼 실험 후보)
+
 ## Answered
 - [x] transpose는 데이터를 복사하는가?
   - 결론: 아니다. stride만 바뀌고 같은 버퍼를 공유. contiguous로 만들 때 copy 발생.
