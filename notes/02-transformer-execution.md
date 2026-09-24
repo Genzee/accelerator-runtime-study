@@ -116,12 +116,27 @@ Llama-3-8B (32 heads, bf16), layer 하나 기준, 표를 통째로 만든다고 
 - 시스템 비유: weight = 공유 read-only 세그먼트, KV cache = 세션마다 커지는 힙.
 - [계산] decode 상한: 토큰 1개당 weight 16 GB를 1번 읽음. M4 ~100 GB/s(01 실험 Add 93–108 GB/s) → **≈6 tok/s**. 그래서 LLM 서빙은 "대역폭 대비 모델 크기" 싸움 → 양자화·batching이 효과적.
 
-## 7. 한 줄 요약
+## 7. "칩에 나눠준다"의 세 가지 의미
+
+| | 무엇을 나누나 | 예 | 칩 사이 데이터 이동 | 이 스터디 |
+|---|---|---|---|---|
+| **A. 요청 나누기** | 같은 모델 **복사본**을 칩마다 두고 요청을 배분 | 짧은 질문 → NPU, 긴 문서 → GPU | 거의 없음 (요청 입출력만) | Phase 7 |
+| **B. 모델 하나를 안에서 쪼개기** | 한 모델의 연산을 여러 칩이 나눠 실행 | block 1–16 GPU / 17–32 NPU, prefill GPU / decode NPU | **경계마다 activation 이동** | Phase 6, 8 (본체) |
+| **C. 여러 모델을 배치하기** | 서로 다른 모델을 어느 칩에 올릴지 | 카메라: 검출 모델 NPU, 추적 모델 CPU / 음성인식→LLM→TTS | 모델 사이 결과만 | A의 일반화 |
+
+B 안에서도 자르는 단위가 다시 나뉜다:
+- **layer/block 단위** (pipeline parallelism): block 경계에서 `[S, H]` activation 하나만 넘기면 됨 → 가장 깔끔
+- **subgraph/phase 단위**: prefill과 decode를 다른 칩에 → KV cache를 넘겨야 함 (토큰당 128 KiB)
+- **tensor 단위** (tensor parallelism): MatMul 하나의 weight를 칩들이 쪼개 들고 동시에 계산 → 매 layer마다 결과를 모으는 통신 필요. 칩 사이 연결이 매우 빨라야 함 (보통 같은 종류 GPU끼리)
+
+난이도·위험: A < C < B(layer) < B(phase) < B(tensor). 그래서 A부터 검증하고 B로 간다.
+
+## 8. 한 줄 요약
 
 > LLM = **거대한 read-only weight** + **토큰 수만큼 커지는 KV cache** 위에서, MatMul 위주의 **같은 block을 N번 반복하는 DAG**를 **토큰 하나 생성할 때마다 한 번** 실행하는 프로그램.
 
 ## 완료 기준 체크 (Phase 1)
 
 - [ ] Transformer block을 operator 단위로 그릴 수 있다 — 개념도는 §4. PyTorch/NumPy 실구현으로 확인 필요
-- [ ] "모델을 쪼갠다"가 layer/subgraph/tensor 중 무엇인지 구분할 수 있다
+- [x] "모델을 쪼갠다"가 layer/subgraph/tensor 중 무엇인지 구분할 수 있다 — §7
 - [ ] prefill과 decode의 실행 특성이 왜 다른지 설명할 수 있다 — 개념은 §6, KV cache on/off 실측 필요
