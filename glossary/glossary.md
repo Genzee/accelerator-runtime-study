@@ -33,3 +33,8 @@
 | prefill / decode | 프롬프트 일괄 처리(compute-bound) / 토큰 1개씩 생성(memory-bound) | notes/02 |
 | KV cache | 이전 토큰의 K/V를 저장해 decode 때 재계산을 피함 | notes/02 |
 | logits | 단어장 전체에 대한 점수. softmax 후 확률 | notes/02 |
+| bandwidth (대역폭) | 초당 옮길 수 있는 데이터 양 (GB/s). 통로의 폭. 버스 폭 × 전송 속도로 결정 | notes/03 |
+| memory latency | 첫 바이트가 도착하기까지 걸리는 시간 (DRAM ~100 ns). 대역폭과 별개 | notes/03 |
+| capacity (용량) | 메모리에 담을 수 있는 총량 (GB). 대역폭과 별개 | notes/03 |
+| unified memory | CPU·GPU·NPU가 같은 물리 DRAM을 공유하는 구조. 복사는 없지만 대역폭을 나눠 씀 | notes/03 |
+| contention (경합) | 여러 주체가 같은 공유 자원(여기선 메모리 대역폭)을 나눠 쓰며 각자 느려지는 현상 | notes/03 |
