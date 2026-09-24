@@ -265,6 +265,25 @@ B 안에서도 자르는 단위가 다시 나뉜다:
 2. **dtype 승격**: attention score 나눗셈 하나 때문에 activation이 float64가 되고, 이후 모든 MatMul에서 float32 weight(474 MiB)가 **매 토큰마다 float64로 변환**됨.
 - 교훈: "같은 모델, 같은 연산"이라도 **layout/dtype이 kernel 경로를 바꾸면 10배 단위로 달라진다.** accelerator로 넘길 때도 똑같이 일어날 수 있는 일 (지원 dtype/layout이 아니면 변환 copy 또는 느린 fallback). cost model 키에 dtype·layout이 들어가야 하는 이유.
 
+### 9.6 [측정] "연산만 하는데 어떻게 답이 나오나" — 다음 토큰 확률에 지식이 들어 있다
+
+실험: `experiments/02-transformer-block/what_does_it_know.py` (GPT-2 small 124M)
+
+| 입력 | 다음 토큰 top 후보 |
+|---|---|
+| Monday, Tuesday, Wednesday, | **Thursday 79%**, Friday 7% |
+| 1, 2, 3, 4, | **5 87%** |
+| The Eiffel Tower is located in the city of | **Paris 6.4%** (1위), London 4.6%, Amsterdam 3.4% |
+| The capital of Japan is | the 9.4%, **Tokyo 6.7%** (2위) |
+| The capital of France is | the 8.5%, now, a, France, **Paris 3.2%** (5위) |
+| Water boils at a temperature of 100 degrees | **Fahrenheit 34.5%** (틀림), F, Celsius 14.4% |
+| The CEO of Apple is | a, not, the … (모름) |
+
+- 모델은 답을 "검색"하지 않는다. 다음 토큰 확률만 낸다. 그런데 확률을 잘 맞히려면 지식이 필요해서, 학습 과정에서 지식이 weight 숫자에 압축돼 들어간다.
+- "the" 같은 토큰이 1위인 건 문법적으로 가능한 이어짐이 많아서 ("the city of Paris…").
+- 124M짜리 작은 모델은 지식이 희미하고 틀리기도 한다. 모델이 클수록(파라미터 = 저장 공간) 더 많이, 더 정확히 담는다.
+- 시스템 비유: CPU는 덧셈·곱셈·분기만 하지만 프로그램에 따라 무엇이든 한다. **MatMul이 명령어 실행이라면 weight가 프로그램**이고, 그 프로그램은 사람이 짠 게 아니라 학습이 데이터에서 찾아낸 것.
+
 ## 8. 한 줄 요약
 
 > LLM = **거대한 read-only weight** + **토큰 수만큼 커지는 KV cache** 위에서, MatMul 위주의 **같은 block을 N번 반복하는 DAG**를 **토큰 하나 생성할 때마다 한 번** 실행하는 프로그램.
