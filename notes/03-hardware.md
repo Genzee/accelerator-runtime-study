@@ -47,3 +47,26 @@ LLM decode 관점 [계산, 공칭값 기준]:
 - 스케줄러 의미: unified memory에서 GPU/NPU도 **이 같은 통로**를 쓴다면, memory-bound 작업(LLM decode)을 CPU→GPU로 옮기거나 둘에 나눠도 통로가 넓어지지 않는다. 반면 compute-bound 작업은 칩마다 연산기가 따로 있어서 나누면 이득 가능.
   - → cost model에서 **compute는 칩별 자원, 대역폭은 공유 자원**으로 모델링해야 한다.
 - [남은 검증] CPU+GPU(Metal) 동시 실행 시에도 같은 천장을 공유하는지는 아직 미측정.
+
+## 칩 ↔ 자기 메모리 대역폭 비교 (공칭 스펙, 기억 기반 — 인용 전 재확인 필요)
+
+| 분류 | 칩 | 메모리 종류 | 대역폭 | 용량 |
+|---|---|---|---|---|
+| Unified (LPDDR) | Apple M4 | LPDDR5X 128-bit | 120 GB/s (실측 ~90) | ~32 GB |
+| | Apple M4 Pro / Max | LPDDR5X 256 / 512-bit | 273 / 546 GB/s | ~64 / 128 GB |
+| | Apple M3 Ultra | LPDDR5 1024-bit | 819 GB/s | ~512 GB |
+| | NVIDIA DGX Spark (GB10) | LPDDR5X | 273 GB/s | 128 GB |
+| Unified (HBM) | AMD MI300A | HBM3 | 5.3 TB/s | 128 GB |
+| 소비자 GPU (GDDR) | RTX 4060 | GDDR6 | 272 GB/s | 8 GB |
+| | RTX 4090 / 5090 | GDDR6X / GDDR7 | 1.0 / 1.8 TB/s | 24 / 32 GB |
+| 워크스테이션 GPU | RTX A6000 | GDDR6 | 768 GB/s | 48 GB |
+| 데이터센터 GPU (HBM) | A100 / H100 / H200 / B200 | HBM2e / 3 / 3e / 3e | 2.0 / 3.35 / 4.8 / 8 TB/s | 80 / 80 / 141 / 192 GB |
+| | AMD MI300X | HBM3 | 5.3 TB/s | 192 GB |
+| NPU | FuriosaAI RNGD | HBM3 | 1.5 TB/s | 48 GB |
+| | Google TPU v5e / v5p | HBM2e | 0.8 / 2.8 TB/s | 16 / 95 GB |
+| 칩 사이 | PCIe 4.0 / 5.0 x16 | — | ~32 / ~64 GB/s (단방향) | — |
+
+- 대역폭을 결정하는 건 "unified냐 아니냐"가 아니라 **메모리 종류(LPDDR < GDDR < HBM)와 버스 폭**. MI300A는 unified인데 HBM이라 5 TB/s.
+- 트레이드오프: HBM은 빠르지만 비싸고 용량이 작음, LPDDR은 느리지만 싸고 용량이 큼.
+- 분리형 GPU의 핵심 불균형: 자기 메모리 1–8 TB/s vs 호스트와 잇는 PCIe 32–64 GB/s → **30–100배 차이**. 칩 경계를 넘는 게 비싼 이유.
+- 공칭값은 이론 최대. 실측은 보통 70–90% (M4: 90/120 ≈ 75%).
