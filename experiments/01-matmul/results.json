@@ -1,0 +1,402 @@
+{
+  "env": {
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "python": "3.13.5",
+    "numpy": "2.5.3"
+  },
+  "matmul": [
+    {
+      "label": "decode-like  (M=1)",
+      "M": 1,
+      "K": 4096,
+      "N": 4096,
+      "dtype": "float32",
+      "est_input_bytes": 16384,
+      "est_weight_bytes": 67108864,
+      "est_output_bytes": 16384,
+      "est_total_bytes": 67141632,
+      "est_flops": 33554432,
+      "est_ai_flop_per_byte": 0.4997559785261103,
+      "meas_n": 300,
+      "meas_p50_us": 974.6244177222252,
+      "meas_p95_us": 1123.165711760521,
+      "meas_min_us": 954.5409120619297,
+      "meas_gflops_per_s": 34.42806417514079
+    },
+    {
+      "label": "decode-like  (M=1)",
+      "M": 1,
+      "K": 4096,
+      "N": 4096,
+      "dtype": "float64",
+      "est_input_bytes": 32768,
+      "est_weight_bytes": 134217728,
+      "est_output_bytes": 32768,
+      "est_total_bytes": 134283264,
+      "est_flops": 33554432,
+      "est_ai_flop_per_byte": 0.24987798926305516,
+      "meas_n": 115,
+      "meas_p50_us": 2551.0000996291637,
+      "meas_p95_us": 2950.625028461218,
+      "meas_min_us": 2481.1248295009136,
+      "meas_gflops_per_s": 13.153442057833622
+    },
+    {
+      "label": "decode-like  (M=1)",
+      "M": 1,
+      "K": 4096,
+      "N": 4096,
+      "dtype": "float16",
+      "est_input_bytes": 8192,
+      "est_weight_bytes": 33554432,
+      "est_output_bytes": 8192,
+      "est_total_bytes": 33570816,
+      "est_flops": 33554432,
+      "est_ai_flop_per_byte": 0.9995119570522206,
+      "meas_n": 10,
+      "meas_p50_us": 41164.645459502935,
+      "meas_p95_us": 47465.791925787926,
+      "meas_min_us": 38114.24970626831,
+      "meas_gflops_per_s": 0.815127438253058
+    },
+    {
+      "label": "small square",
+      "M": 128,
+      "K": 128,
+      "N": 128,
+      "dtype": "float32",
+      "est_input_bytes": 65536,
+      "est_weight_bytes": 65536,
+      "est_output_bytes": 65536,
+      "est_total_bytes": 196608,
+      "est_flops": 4194304,
+      "est_ai_flop_per_byte": 21.333333333333332,
+      "meas_n": 2000,
+      "meas_p50_us": 4.458706825971603,
+      "meas_p95_us": 4.542060196399689,
+      "meas_min_us": 3.832858055830002,
+      "meas_gflops_per_s": 940.6996610695553
+    },
+    {
+      "label": "small square",
+      "M": 128,
+      "K": 128,
+      "N": 128,
+      "dtype": "float64",
+      "est_input_bytes": 131072,
+      "est_weight_bytes": 131072,
+      "est_output_bytes": 131072,
+      "est_total_bytes": 393216,
+      "est_flops": 4194304,
+      "est_ai_flop_per_byte": 10.666666666666666,
+      "meas_n": 2000,
+      "meas_p50_us": 12.417323887348175,
+      "meas_p95_us": 12.54212111234665,
+      "meas_min_us": 10.291114449501038,
+      "meas_gflops_per_s": 337.7784165132
+    },
+    {
+      "label": "small square",
+      "M": 128,
+      "K": 128,
+      "N": 128,
+      "dtype": "float16",
+      "est_input_bytes": 32768,
+      "est_weight_bytes": 32768,
+      "est_output_bytes": 32768,
+      "est_total_bytes": 98304,
+      "est_flops": 4194304,
+      "est_ai_flop_per_byte": 42.666666666666664,
+      "meas_n": 122,
+      "meas_p50_us": 2448.583487421274,
+      "meas_p95_us": 2612.6662269234657,
+      "meas_min_us": 2408.584114164114,
+      "meas_gflops_per_s": 1.7129511905747723
+    },
+    {
+      "label": "mid square",
+      "M": 512,
+      "K": 512,
+      "N": 512,
+      "dtype": "float32",
+      "est_input_bytes": 1048576,
+      "est_weight_bytes": 1048576,
+      "est_output_bytes": 1048576,
+      "est_total_bytes": 3145728,
+      "est_flops": 268435456,
+      "est_ai_flop_per_byte": 85.33333333333333,
+      "meas_n": 1969,
+      "meas_p50_us": 151.12478286027908,
+      "meas_p95_us": 155.66637739539146,
+      "meas_min_us": 149.99974519014359,
+      "meas_gflops_per_s": 1776.2503999637129
+    },
+    {
+      "label": "mid square",
+      "M": 512,
+      "K": 512,
+      "N": 512,
+      "dtype": "float64",
+      "est_input_bytes": 2097152,
+      "est_weight_bytes": 2097152,
+      "est_output_bytes": 2097152,
+      "est_total_bytes": 6291456,
+      "est_flops": 268435456,
+      "est_ai_flop_per_byte": 42.666666666666664,
+      "meas_n": 495,
+      "meas_p50_us": 602.24998742342,
+      "meas_p95_us": 623.7919442355633,
+      "meas_min_us": 598.5829047858715,
+      "meas_gflops_per_s": 445.72098232568806
+    },
+    {
+      "label": "mid square",
+      "M": 512,
+      "K": 512,
+      "N": 512,
+      "dtype": "float16",
+      "est_input_bytes": 524288,
+      "est_weight_bytes": 524288,
+      "est_output_bytes": 524288,
+      "est_total_bytes": 1572864,
+      "est_flops": 268435456,
+      "est_ai_flop_per_byte": 170.66666666666666,
+      "meas_n": 10,
+      "meas_p50_us": 155773.6040558666,
+      "meas_p95_us": 158717.29236096144,
+      "meas_min_us": 155278.00004929304,
+      "meas_gflops_per_s": 1.7232409664459478
+    },
+    {
+      "label": "big square",
+      "M": 2048,
+      "K": 2048,
+      "N": 2048,
+      "dtype": "float32",
+      "est_input_bytes": 16777216,
+      "est_weight_bytes": 16777216,
+      "est_output_bytes": 16777216,
+      "est_total_bytes": 50331648,
+      "est_flops": 17179869184,
+      "est_ai_flop_per_byte": 341.3333333333333,
+      "meas_n": 32,
+      "meas_p50_us": 9450.583020225167,
+      "meas_p95_us": 9896.458126604557,
+      "meas_min_us": 9170.958772301674,
+      "meas_gflops_per_s": 1817.8634214665283
+    },
+    {
+      "label": "big square",
+      "M": 2048,
+      "K": 2048,
+      "N": 2048,
+      "dtype": "float64",
+      "est_input_bytes": 33554432,
+      "est_weight_bytes": 33554432,
+      "est_output_bytes": 33554432,
+      "est_total_bytes": 100663296,
+      "est_flops": 17179869184,
+      "est_ai_flop_per_byte": 170.66666666666666,
+      "meas_n": 10,
+      "meas_p50_us": 37718.60455162823,
+      "meas_p95_us": 39503.33409011364,
+      "meas_min_us": 37250.70832297206,
+      "meas_gflops_per_s": 455.4746759118473
+    },
+    {
+      "label": "prefill-like (M=2048)",
+      "M": 2048,
+      "K": 4096,
+      "N": 4096,
+      "dtype": "float32",
+      "est_input_bytes": 33554432,
+      "est_weight_bytes": 67108864,
+      "est_output_bytes": 33554432,
+      "est_total_bytes": 134217728,
+      "est_flops": 68719476736,
+      "est_ai_flop_per_byte": 512.0,
+      "meas_n": 10,
+      "meas_p50_us": 40516.91689528525,
+      "meas_p95_us": 41377.87502259016,
+      "meas_min_us": 39888.250175863504,
+      "meas_gflops_per_s": 1696.0687535432032
+    },
+    {
+      "label": "prefill-like (M=2048)",
+      "M": 2048,
+      "K": 4096,
+      "N": 4096,
+      "dtype": "float64",
+      "est_input_bytes": 67108864,
+      "est_weight_bytes": 134217728,
+      "est_output_bytes": 67108864,
+      "est_total_bytes": 268435456,
+      "est_flops": 68719476736,
+      "est_ai_flop_per_byte": 256.0,
+      "meas_n": 10,
+      "meas_p50_us": 153817.18752905726,
+      "meas_p95_us": 158719.6672335267,
+      "meas_min_us": 151942.58419796824,
+      "meas_gflops_per_s": 446.7607153655592
+    },
+    {
+      "label": "skinny K",
+      "M": 2048,
+      "K": 64,
+      "N": 2048,
+      "dtype": "float32",
+      "est_input_bytes": 524288,
+      "est_weight_bytes": 524288,
+      "est_output_bytes": 16777216,
+      "est_total_bytes": 17825792,
+      "est_flops": 536870912,
+      "est_ai_flop_per_byte": 30.11764705882353,
+      "meas_n": 574,
+      "meas_p50_us": 516.0414148122072,
+      "meas_p95_us": 561.750028282404,
+      "meas_min_us": 488.29102888703346,
+      "meas_gflops_per_s": 1040.3640029461062
+    },
+    {
+      "label": "skinny K",
+      "M": 2048,
+      "K": 64,
+      "N": 2048,
+      "dtype": "float64",
+      "est_input_bytes": 1048576,
+      "est_weight_bytes": 1048576,
+      "est_output_bytes": 33554432,
+      "est_total_bytes": 35651584,
+      "est_flops": 536870912,
+      "est_ai_flop_per_byte": 15.058823529411764,
+      "meas_n": 170,
+      "meas_p50_us": 1744.5413395762444,
+      "meas_p95_us": 1898.3329646289349,
+      "meas_min_us": 1628.7090256810188,
+      "meas_gflops_per_s": 307.74330181846415
+    }
+  ],
+  "add": [
+    {
+      "label": "add n=4194304",
+      "est_total_bytes": 50331648,
+      "est_flops": 4194304,
+      "est_ai_flop_per_byte": 0.08333333333333333,
+      "meas_n": 631,
+      "meas_p50_us": 466.6252061724663,
+      "meas_p95_us": 537.9999056458473,
+      "meas_min_us": 430.70781975984573,
+      "meas_effective_GBps": 107.86311441006308
+    },
+    {
+      "label": "add n=8388608",
+      "est_total_bytes": 100663296,
+      "est_flops": 8388608,
+      "est_ai_flop_per_byte": 0.08333333333333333,
+      "meas_n": 274,
+      "meas_p50_us": 1078.062690794468,
+      "meas_p95_us": 1223.917119204998,
+      "meas_min_us": 982.0829145610332,
+      "meas_effective_GBps": 93.37425073658486
+    }
+  ],
+  "dag": {
+    "order": [
+      "n1",
+      "n2",
+      "n3a",
+      "n3b",
+      "n4"
+    ],
+    "edges": [
+      {
+        "src": "graph_input",
+        "dst": "n1",
+        "tensor": "x",
+        "shape": [
+          4,
+          64
+        ],
+        "bytes": 1024,
+        "weight": false
+      },
+      {
+        "src": "initializer",
+        "dst": "n1",
+        "tensor": "W1",
+        "shape": [
+          64,
+          256
+        ],
+        "bytes": 65536,
+        "weight": true
+      },
+      {
+        "src": "n1",
+        "dst": "n2",
+        "tensor": "t1",
+        "shape": [
+          4,
+          256
+        ],
+        "bytes": 4096,
+        "weight": false
+      },
+      {
+        "src": "initializer",
+        "dst": "n2",
+        "tensor": "b1",
+        "shape": [
+          256
+        ],
+        "bytes": 1024,
+        "weight": true
+      },
+      {
+        "src": "n2",
+        "dst": "n3a",
+        "tensor": "t2",
+        "shape": [
+          4,
+          256
+        ],
+        "bytes": 4096,
+        "weight": false
+      },
+      {
+        "src": "n3a",
+        "dst": "n3b",
+        "tensor": "t2r",
+        "shape": [
+          4,
+          256
+        ],
+        "bytes": 4096,
+        "weight": false
+      },
+      {
+        "src": "initializer",
+        "dst": "n3b",
+        "tensor": "W2",
+        "shape": [
+          256,
+          64
+        ],
+        "bytes": 65536,
+        "weight": true
+      },
+      {
+        "src": "n3b",
+        "dst": "n4",
+        "tensor": "t3",
+        "shape": [
+          4,
+          64
+        ],
+        "bytes": 1024,
+        "weight": false
+      }
+    ]
+  }
+}
