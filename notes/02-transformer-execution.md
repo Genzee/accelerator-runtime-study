@@ -1,6 +1,6 @@
 # 02 — Transformer / LLM을 실행 관점에서 이해
 
-> Phase 1. 진행 중.
+> Phase 1. 완료 기준 충족 (2026-09-24).
 > 실험: `experiments/02-transformer-block/attention_by_hand.py`
 > 예시 수치는 Llama-3-8B 기준 (H=4096, layer 32, head 32, KV head 8, FFN 14336, vocab 128256).
 
@@ -194,12 +194,83 @@ B 안에서도 자르는 단위가 다시 나뉜다:
 
 난이도·위험: A < C < B(layer) < B(phase) < B(tensor). 그래서 A부터 검증하고 B로 간다.
 
+## 9. [측정] GPT-2 small을 NumPy로 직접 실행
+
+실험: `experiments/02-transformer-block/gpt2_numpy.py` (NumPy + tiktoken만 사용, weight는 `models/gpt2/`에 별도 다운로드)
+환경: Apple M4 CPU, fp32, greedy decoding. 결과 원본: `results_gpt2.json`
+
+### 9.1 tensor 흐름 (입력 "The weather today is", S=4)
+
+| 단계 | shape | bytes |
+|---|---|---|
+| embedding (wte[ids] + wpe[pos]) | [4, 768] | 12 KiB |
+| QKV projection | [4, 2304] | 36 KiB |
+| Q / K (12 heads) | [12, 4, 64] | 12 KiB |
+| FFN up + GELU | [4, 3072] | 48 KiB |
+| block 출력 | [4, 768] | 12 KiB |
+| **block 5→6 경계 (칩 분할 시 이동량)** | [4, 768] | **12 KiB** |
+| logits (마지막 토큰만) | [1, 50257] | 196 KiB |
+
+다음 토큰 top-5: ' very' 0.043, ' good' 0.032, ' pretty' 0.031 … → 생성 결과: "The weather today is **very good, and we're going to be able to get some good weather tomorrow.** …" (GPT-2 greedy 특유의 반복 포함)
+
+### 9.2 KV cache 효과
+
+| | 측정값 |
+|---|---|
+| decode (cache 사용) | 토큰당 **8.44 ms** (119 tok/s) |
+| KV cache 크기 | 토큰당 72 KiB (12 layer × K,V × 768 × 4B) |
+| cache 사용 vs 미사용 출력 | **동일** (계산 결과는 같고 재계산만 생략) |
+| cache 미사용: 토큰 1개당 비용 | 문장 길이 4 → 9.9 ms, 43 → 26.9 ms (길이에 비례해 증가) |
+| 40토큰 생성 총 시간 | cache 351 ms vs 미사용 736 ms |
+
+### 9.3 prefill: 한 번에 넣는 토큰이 많을수록 토큰당 비용이 싸진다
+
+| 입력 토큰 수 | prefill 시간 | 토큰당 |
+|---|---|---|
+| 1 | 7.85 ms | 7.85 ms |
+| 4 | 9.85 ms | 2.46 ms |
+| 16 | 15.9 ms | 0.99 ms |
+| 64 | 36.2 ms | 0.57 ms |
+| 256 | 114 ms | **0.45 ms** |
+| 1000 | 667 ms | 0.67 ms |
+
+- 1토큰 → 256토큰에서 토큰당 비용 **17배 감소**: weight(474 MiB)를 한 번 읽어 여러 토큰이 재사용 → memory-bound에서 compute-bound로 이동. = **prefill은 싸고 decode는 비싼 이유**, **batching이 효과적인 이유**.
+- 1000토큰에서 다시 증가 [추측]: attention의 S² 비용이 커지기 시작.
+- KV cache가 없으면 1000토큰 문맥에서 토큰 1개 생성마다 667 ms, cache가 있으면 ~8.4 ms → **~80배**.
+
+### 9.4 decode 1 step 시간 비중 (문맥 ~40토큰)
+
+| 연산 | ms/step | 비중 |
+|---|---|---|
+| MatMul lm_head (768→50257) | 2.28 | 25.9% |
+| MatMul FFN down | 1.74 | 19.7% |
+| MatMul FFN up | 1.70 | 19.4% |
+| MatMul QKV | 1.31 | 14.8% |
+| MatMul Wo | 0.46 | 5.2% |
+| LayerNorm / Attention core / GELU / reshape / 기타 | 1.32 | 15.0% |
+
+- **MatMul이 85%.** 그중 lm_head 하나가 26%: 단어장 50257 × 768 표(147 MiB)를 토큰마다 통째로 읽기 때문. 작은 모델일수록 lm_head 비중이 크다.
+- attention core는 3.7%: 문맥이 짧으면 attention은 싸다. 문맥이 길어지면 커짐(9.3 참조).
+- [계산] step당 읽는 weight 472 MiB ÷ 90 GB/s = **5.5 ms 하한** vs 측정 8.8 ms → 대역폭 한계의 약 62%. 나머지는 Python 오버헤드, 작은 op들 [추측].
+
+### 9.5 실수에서 배운 것: 같은 계산인데 12~15배 느렸던 두 가지 원인
+
+| 조건 | decode 토큰당 |
+|---|---|
+| 정상 (정렬된 메모리, fp32 유지) | **8.44 ms** |
+| weight 메모리 주소 misaligned | 103 ms (12배) |
+| `np.sqrt(64)`(float64 스칼라)로 나눠서 이후 전체가 float64로 승격 | 131 ms (15배) |
+
+1. **정렬(alignment)**: safetensors header가 14,291 bytes라 파일을 그대로 참조하면 weight 시작 주소가 4의 배수가 아님 → NumPy가 BLAS를 못 쓰고 느린 루프로 처리. 로딩 시 복사해 정렬하면 해결.
+2. **dtype 승격**: attention score 나눗셈 하나 때문에 activation이 float64가 되고, 이후 모든 MatMul에서 float32 weight(474 MiB)가 **매 토큰마다 float64로 변환**됨.
+- 교훈: "같은 모델, 같은 연산"이라도 **layout/dtype이 kernel 경로를 바꾸면 10배 단위로 달라진다.** accelerator로 넘길 때도 똑같이 일어날 수 있는 일 (지원 dtype/layout이 아니면 변환 copy 또는 느린 fallback). cost model 키에 dtype·layout이 들어가야 하는 이유.
+
 ## 8. 한 줄 요약
 
 > LLM = **거대한 read-only weight** + **토큰 수만큼 커지는 KV cache** 위에서, MatMul 위주의 **같은 block을 N번 반복하는 DAG**를 **토큰 하나 생성할 때마다 한 번** 실행하는 프로그램.
 
 ## 완료 기준 체크 (Phase 1)
 
-- [ ] Transformer block을 operator 단위로 그릴 수 있다 — 개념도는 §4. PyTorch/NumPy 실구현으로 확인 필요
+- [x] Transformer block을 operator 단위로 그릴 수 있다 — §4 개념도 + §9 NumPy 실구현
 - [x] "모델을 쪼갠다"가 layer/subgraph/tensor 중 무엇인지 구분할 수 있다 — §7
-- [ ] prefill과 decode의 실행 특성이 왜 다른지 설명할 수 있다 — 개념은 §6, KV cache on/off 실측 필요
+- [x] prefill과 decode의 실행 특성이 왜 다른지 설명할 수 있다 — §6 개념 + §9.2~9.3 실측
