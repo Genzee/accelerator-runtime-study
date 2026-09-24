@@ -4,7 +4,7 @@
 Phase 2 — CPU / GPU / NPU 실행구조
 
 ## Current Task
-- [ ] Task 5–6: Arithmetic intensity / Roofline — 지금까지 측정한 MatMul·Add·GPT-2 op들을 M4 CPU roofline 위에 찍기
+- [ ] 작업(연산)별 IO 요구 정리 → 배치 설계 (다음 세션 시작점)
 
 ## Completed
 - [x] 2026-09-24 — repo 골격, `.venv` (NumPy 2.5.3 / Accelerate BLAS) 구성
@@ -41,6 +41,8 @@ Phase 2 — CPU / GPU / NPU 실행구조
 - 벡터 = 토큰별 의미 좌표(상태). block마다 attention으로 문맥을 흡수해 갱신된다.
 - attention = Q·Kᵀ로 관련도 표 → softmax 비율 → V 가중합. weight가 '누구를 참고할지'를 결정.
 - causal mask 때문에 앞 토큰의 K/V는 불변 → KV cache가 성립.
+- LLM 추론 흐름 전체(토크나이징→임베딩→[attention+FFN]×N→출구→반복)를 개념으로 설명 가능. 요약은 notes/02 §10.
+- 메모리 계층(레지스터→SRAM→L2→HBM/VRAM→PCIe→DRAM→SSD)과 층마다 파이프 한계. 데이터 3종(weight/activation/KV cache)의 배치 원칙. notes/03.
 - 모델 = 코드(아키텍처) + {이름: 숫자} weight 사전. block들은 같은 코드에 다른 숫자.
 - prefill은 weight를 여러 토큰이 재사용해서 토큰당 싸고, decode는 토큰마다 weight 전체를 읽어서 비싸다 (실측 17배).
 - layout(정렬)·dtype 하나로 같은 계산이 10배 이상 느려질 수 있다.
@@ -51,4 +53,8 @@ Phase 2 — CPU / GPU / NPU 실행구조
 - fp64가 fp32의 2배가 아니라 4배 느린 이유 → QUESTIONS.md
 
 ## Next Task
-- Task 5–6: Roofline. M4 CPU의 compute 천장(~1.8 TFLOP/s)과 대역폭 천장(~90 GB/s)으로 roofline을 그리고, 지금까지 측정한 op들(MatMul shape별, Add, GPT-2 decode/prefill의 각 MatMul)을 점으로 찍어 어느 쪽 천장에 붙어 있는지 확인.
+- **다음 세션 (사용자 제안)**: "각 작업이 어떤 IO가 필요하니 어떻게 디자인해야 하나"
+  1. 작업 목록: prefill, decode, attention(KV cache 읽기), FFN, lm_head, KV cache 쓰기, 칩 간 activation 전달, 도구 대기
+  2. 각 작업마다: 읽는 데이터(weight/activation/KV) · bytes · 어느 메모리 층 · 어느 파이프를 지나나 · compute-bound/memory-bound
+  3. 그 표를 바탕으로 배치 설계 원칙 도출 (무엇을 어디에 상주시키고 어디를 자를지)
+  4. 이어서 Roofline(Task 5–6)으로 M4에서 수치 확인

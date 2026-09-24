@@ -38,3 +38,14 @@
 | capacity (용량) | 메모리에 담을 수 있는 총량 (GB). 대역폭과 별개 | notes/03 |
 | unified memory | CPU·GPU·NPU가 같은 물리 DRAM을 공유하는 구조. 복사는 없지만 대역폭을 나눠 씀 | notes/03 |
 | contention (경합) | 여러 주체가 같은 공유 자원(여기선 메모리 대역폭)을 나눠 쓰며 각자 느려지는 현상 | notes/03 |
+| decode (단계) | 답을 토큰 1개씩 만드는 바퀴들. 토크나이징과 무관 | notes/02 |
+| lap/바퀴 | 토큰 하나를 만들기 위해 전체 층을 한 번 통과하는 것 | notes/02 |
+| early exit | 쉬운 토큰은 중간 층에서 끝내자는 연구 아이디어. 일반 서빙에선 안 씀 | notes/02 |
+| prefix caching | 이전 요청의 KV cache를 보관했다가 앞부분이 같으면 재사용 | notes/02 |
+| tool call | 모델이 도구 호출문을 토큰으로 생성, 실행은 앱/에이전트 층 | notes/02 |
+| RAG | 관련 문서를 벡터 검색해 문맥에 붙여 주는 방식 | notes/02 |
+| logit lens | 중간 층 벡터를 출구에 바로 넣어 "그 시점의 다음 단어"를 엿보는 관찰 기법 | notes/02 |
+| VRAM / HBM / GDDR | GPU 전용 메모리(역할) / 그 기술 종류(HBM: 적층·초광대역, GDDR: 게이밍용) | notes/03 |
+| SRAM | 칩 안의 작고 빠른 메모리(L1/shared, 캐시) | notes/03 |
+| op fusion | 여러 연산을 한 kernel로 합쳐 중간 결과를 SRAM에 둔 채 처리 | notes/01, 03 |
+| systolic array | 곱셈기 격자에 데이터를 흘려보내며 재사용하는 NPU 구조 | notes/03 |
