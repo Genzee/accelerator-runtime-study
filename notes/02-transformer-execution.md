@@ -40,6 +40,25 @@ block을 통과해도 `[S, H]`가 유지된다 → block 단위로 잘라 device
 - block을 지날 때마다 attention으로 **문맥을 흡수**해 좌표가 이동한다 ("배를 타고 바다로" → 선박 쪽).
 - 시스템 비유: token id = 배열 인덱스, 벡터 = **토큰별 상태(state)**, block 32개 = 그 상태를 차례로 갱신하는 함수들.
 
+## 3.5 [측정] 모델 파일 안에는 무엇이 있나 (GPT-2 small, safetensors header만 조회)
+
+실험: `experiments/02-transformer-block/inspect_model_file.py` (파일 전체 523 MiB 중 header 14 KB만 HTTP Range로 받음)
+
+- 파일 = `{이름: (dtype, shape, byte 위치)}` 목차 + **숫자 덩어리**. tensor 160개.
+- 이름이 곧 구조: `wte`(토큰 embedding 표 [50257,768], 147 MiB), `wpe`(위치 embedding), `h.0`~`h.11`(block 12개), `ln_f`(마지막 norm).
+- block 하나 = 13개 tensor, **31.04 MiB**. `h.0`과 `h.11`은 **이름 규칙·shape가 완전히 같고 숫자만 다르다.**
+  - `attn.c_attn.weight [768, 2304]` = Wq|Wk|Wv를 가로로 붙인 행렬 (768×3 = 2304)
+  - `attn.c_proj.weight [768, 768]` = Wo
+  - `mlp.c_fc.weight [768, 3072]`, `mlp.c_proj.weight [3072, 768]` = FFN 두 MatMul
+  - `ln_*` = LayerNorm의 scale/shift (768개짜리, 무시할 만큼 작음)
+  - `attn.bias [1,1,1024,1024]` = causal mask 삼각형 표. 학습값이 아니라 고정 버퍼 (block마다 4 MiB씩 중복 저장돼 있음)
+- 파일 안 byte 위치는 **뒤죽박죽**이다 → 파일은 그냥 사전이고, **실행 순서는 모델 코드(아키텍처 정의)가 안다.**
+
+**쪼개서 올린다 = 이 사전에서 이름으로 골라 각 칩 메모리에 복사하는 것.**
+- 예: `h.0.*`~`h.5.*` + `wte`/`wpe` → 칩 A, `h.6.*`~`h.11.*` + `ln_f` → 칩 B.
+- 각 칩은 **같은 block 코드**를 돌리되 **자기가 가진 숫자**로 계산한다. 쪼개진 조각끼리 다른 건 숫자 값뿐.
+- [주의] 칩 A는 `wte`로 시작하고 칩 B는 마지막에 lm_head로 `wte`를 다시 씀(weight tying) → 양쪽에 사본이 필요할 수 있다.
+
 ## 4. Block 하나 = "토큰끼리 대화(attention)" + "토큰별 혼자 생각(FFN)"
 
 ```
