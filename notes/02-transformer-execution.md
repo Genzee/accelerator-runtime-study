@@ -284,6 +284,27 @@ B 안에서도 자르는 단위가 다시 나뉜다:
 - 124M짜리 작은 모델은 지식이 희미하고 틀리기도 한다. 모델이 클수록(파라미터 = 저장 공간) 더 많이, 더 정확히 담는다.
 - 시스템 비유: CPU는 덧셈·곱셈·분기만 하지만 프로그램에 따라 무엇이든 한다. **MatMul이 명령어 실행이라면 weight가 프로그램**이고, 그 프로그램은 사람이 짠 게 아니라 학습이 데이터에서 찾아낸 것.
 
+### 9.7 [측정] 텍스트 → 숫자 → layer별 변화 (logit lens)
+
+실험: `experiments/02-transformer-block/text_to_numbers.py`, 입력 "The Eiffel Tower is located in the city of"
+
+- 텍스트 42 bytes → 토큰 11개 (`'The'`=464, `' E'`=412, `'iff'`=733, `'el'`=417, `' Tower'`=8765 …). "Eiffel"은 사전에 없어서 3조각.
+- 번호 → wte 행 + wpe 행 = x [11, 768] (33 KiB).
+- 마지막 위치(' of')의 벡터를 layer마다 lm_head에 통과시켜 "이 시점에 떠올리는 다음 단어"를 본 결과:
+
+| 지점 | 벡터 크기 | 떠올리는 다음 단어 top-3 |
+|---|---|---|
+| 입력 (embedding) | 4.7 | 무의미한 조각들 |
+| block 0–3 | 54–65 | ' the' 66–82% (문법적으로 흔한 이어짐) |
+| block 4–6 | 70–93 | ' the', ' La', ' England', ' East' (장소 느낌) |
+| block 7–8 | 105–122 | ' San', ' Rome', ' La' (도시 이름) |
+| block 9 | 150 | ' London' 24.8%, ' Paris' 19.4%, ' Amsterdam' 17.8% (유럽 도시) |
+| block 10–11 | 265–444 | **' Paris' 1위** |
+
+- 앞쪽 layer는 문법 수준("of 다음엔 the"), 중간은 범주("장소/도시"), 뒤쪽에서 구체적 사실("Paris")로 좁혀진다.
+- 벡터 크기가 layer마다 커진다: residual로 각 block의 결과가 계속 **더해지기** 때문.
+- 주의: logit lens는 마지막 layer용 출구를 중간에 쓰는 근사 관찰이다. "block 9가 유럽 도시를 생각한다"는 해석은 비유 수준.
+
 ## 8. 한 줄 요약
 
 > LLM = **거대한 read-only weight** + **토큰 수만큼 커지는 KV cache** 위에서, MatMul 위주의 **같은 block을 N번 반복하는 DAG**를 **토큰 하나 생성할 때마다 한 번** 실행하는 프로그램.
