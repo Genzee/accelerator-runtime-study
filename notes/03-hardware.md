@@ -29,3 +29,21 @@ LLM decode 관점 [계산, 공칭값 기준]:
 - 즉 **같은 planner라도 메모리 구조에 따라 cost model이 달라져야 한다.**
 
 [추측] unified라도 zero-copy가 항상 되는 건 아닐 수 있다: 칩마다 요구하는 layout/format(예: ANE 전용 형식)이 다르면 변환 copy가 생긴다. → Phase 4에서 확인.
+
+## [측정] 대역폭 경합: memory-bound 작업을 프로세스 N개로 동시에
+
+실험: `experiments/07-bandwidth-contention/cpu_procs.py` — 프로세스마다 64 MiB fp32 배열 Add를 2초간 반복 (M4: P-core 4, E-core 6).
+
+| 프로세스 수 | 합계 GB/s | 프로세스당 GB/s |
+|---|---|---|
+| 1 | 87.7 | 87.7 |
+| 2 | 91.5 | 45.8 |
+| 4 | 90.5 | 22.6 |
+| 8 | 89.8 | 11.2 |
+
+- **합계가 ~90 GB/s에서 고정**. 프로세스를 늘려도 전체는 안 늘고, 각자 몫만 줄어든다.
+- M4에서는 **코어 1개가 이미 DRAM 통로를 거의 다 채운다.**
+- 경합 대상은 용량(공간)이 아니라 **대역폭(통로)**. 64 MiB × 3 × 8개 = 1.5 GiB로 용량은 넉넉했다.
+- 스케줄러 의미: unified memory에서 GPU/NPU도 **이 같은 통로**를 쓴다면, memory-bound 작업(LLM decode)을 CPU→GPU로 옮기거나 둘에 나눠도 통로가 넓어지지 않는다. 반면 compute-bound 작업은 칩마다 연산기가 따로 있어서 나누면 이득 가능.
+  - → cost model에서 **compute는 칩별 자원, 대역폭은 공유 자원**으로 모델링해야 한다.
+- [남은 검증] CPU+GPU(Metal) 동시 실행 시에도 같은 천장을 공유하는지는 아직 미측정.

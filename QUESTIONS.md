@@ -10,6 +10,7 @@
 - [ ] M=1(decode-like) MatMul 유효 대역폭 69 GB/s가 Add(93–108 GB/s)보다 낮은 이유 — 단일 스레드 GEMV 경로인가?
 
 - [ ] M4 unified memory에서 CPU와 GPU가 memory-bound 작업을 동시에 돌리면 대역폭을 나눠 먹는가? (contention 측정)
+  - 부분 답: CPU 프로세스끼리는 합계 ~90 GB/s 천장에서 고정됨 (1→8 프로세스, `experiments/07-bandwidth-contention/`). CPU+GPU 동시 측정은 아직.
 - [ ] unified memory에서도 CoreML/ANE로 넘길 때 layout 변환 copy가 생기는가? (Phase 4)
 - [ ] llama.cpp `--n-gpu-layers`를 0→전체로 바꾸며 CPU/GPU 분할 지점별 속도 측정 (한 모델을 두 칩에 나눠 싣는 가장 싼 실험 후보)
 
