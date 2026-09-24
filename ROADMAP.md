@@ -323,6 +323,12 @@ MatMul → Relu → MatMul → Softmax → MatMul
 - **Memory**: zero-copy, shared/unified memory, pinned memory, peer-to-peer DMA, NUMA, CXL, coherent interconnect
 - **LLM serving**: vLLM, paged KV cache, continuous batching, prefill/decode disaggregation, speculative decoding, MoE routing
 - **관측**: per-op latency, transfer latency, queue time, device utilization, memory pressure, cache hit/miss 가능성, p50/p95/p99
+- **스케줄링 레벨 2~3 조사** (2026-09-24 추가)
+  - 레벨 구분: ① 노드 내부 연산 배치(이 스터디 본체) → ② 요청 라우팅 → ③ 클러스터 job 배치
+  - 레벨 2 (요청 라우팅): llm-d, Gateway API Inference Extension, NVIDIA Dynamo, AIBrix — KV cache·queue·prefill/decode 인지 라우팅
+  - 레벨 3 (클러스터): NVIDIA Run:ai / KAI Scheduler, Volcano, Kueue, Kubernetes DRA, Slurm, Ray, Backend.AI(래블업), MoAI(모레)
+  - 조사 질문: 이 스케줄러들은 가속기를 "개수"로 다루는가, "비용(모델·단계별 적합도)"으로 다루는가? 레벨 1의 cost model이 레벨 2~3에 어떤 입력으로 들어갈 수 있는가?
+  - 주의: 프로젝트명·참여사는 조사 시점에 최신 상태 재확인
 
 ## 지금은 하지 않을 것
 

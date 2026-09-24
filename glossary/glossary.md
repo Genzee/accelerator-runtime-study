@@ -25,3 +25,11 @@
 | latency / throughput | 요청 1건 소요 시간 / 단위시간당 처리량 | notes/01 |
 | p50 / p95 | 측정 분포의 중앙값 / 95번째 백분위 | notes/01 |
 | warmup | 캐시·JIT·할당 효과를 제거하기 위해 버리는 초기 실행 | notes/01 |
+| embedding | 토큰을 의미 공간의 좌표(벡터)로 바꾸는 표 lookup. 좌표는 학습으로 정해짐 | notes/02 |
+| Q / K / V | 같은 벡터를 weight로 변환한 '찾는 것 / 이름표 / 넘겨줄 내용' | notes/02 |
+| attention | Q·Kᵀ 관련도 → softmax 비율 → V 가중합. 토큰 간 정보 교환 | notes/02 |
+| causal mask | 뒤(미래) 토큰을 못 보게 score를 -inf로 가림 | notes/02 |
+| residual | block 출력에 입력을 더해 원래 정보를 보존 | notes/02 |
+| prefill / decode | 프롬프트 일괄 처리(compute-bound) / 토큰 1개씩 생성(memory-bound) | notes/02 |
+| KV cache | 이전 토큰의 K/V를 저장해 decode 때 재계산을 피함 | notes/02 |
+| logits | 단어장 전체에 대한 점수. softmax 후 확률 | notes/02 |
