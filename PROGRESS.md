@@ -58,3 +58,4 @@ Phase 2 — CPU / GPU / NPU 실행구조
   2. 각 작업마다: 읽는 데이터(weight/activation/KV) · bytes · 어느 메모리 층 · 어느 파이프를 지나나 · compute-bound/memory-bound
   3. 그 표를 바탕으로 배치 설계 원칙 도출 (무엇을 어디에 상주시키고 어디를 자를지)
   4. 이어서 Roofline(Task 5–6)으로 M4에서 수치 확인
+  5. DECISIONS.md의 "하드웨어 추상화 후보(Compute/Memory/Link)"를 워크로드 IO 표와 맞춰 다듬기
